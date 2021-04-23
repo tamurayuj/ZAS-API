@@ -1,0 +1,264 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "ZAS back API",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ],
+  "paths": {
+    "/oauth/v1/token": {
+      "post": {
+        "summary": "Token Endpoint",
+        "tags": [],
+        "responses": {},
+        "operationId": "post-oauth-access_token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "client_id": {
+                    "type": "string"
+                  },
+                  "client_secret": {
+                    "type": "string"
+                  },
+                  "": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Authorizationエンドポイントで取得した認可コードを用いてAccess Token, Refresh Token, ID Tokenを新規取得します。また、Refresh Tokenを用いてAccess Tokenを更新（再発行）します。"
+      },
+      "parameters": []
+    },
+    "/oauth/v1/authorization": {
+      "get": {
+        "summary": "Authorization Endpoint",
+        "tags": [],
+        "responses": {
+          "302": {
+            "description": "Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "state": {
+                      "type": "string",
+                      "description": "リクエスト時に指定されたstate値\n※Authorizationリクエスト時のstateが指定されている場合に返却されます。"
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "認可コード（8Byteの固定長文字列）\n※ユーザーが同意した場合のみ返却されます。"
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "エラーコード\n詳細は下記をご確認ください。\nhttps://openid.net/specs/openid-connect-core-1_0.html#AuthError"
+                    }
+                  }
+                },
+                "examples": {
+                  "成功時": {
+                    "value": "state=af0ifjsldkj&code=SxlOBeZQ"
+                  },
+                  "失敗時": {
+                    "value": "state=af0ifjsldkj&error=invalid_request_object"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "リダイレクト先URL"
+              }
+            }
+          }
+        },
+        "operationId": "get-oauth-v1-authorization",
+        "description": "クライアントがユーザーをAuthorizationエンドポイントへリダイレクトさせ、ユーザーの認証・認可を得るためのエンドポイントです。\nユーザーの認証状態・認可状態を判定し、適切なページへリダイレクトさせ、認可コードを返す機能を提供します。",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "response_type",
+            "required": true,
+            "description": "code という固定文字列を指定してください。"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "client_id",
+            "description": "アプリケーション登録時に発行したClient IDを指定してください。",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "scope",
+            "required": true,
+            "description": "UserInfo APIから取得できる属性情報を指定できます。 複数選択する場合はスペース区切りで指定します。 openid ：（必須）ユーザー識別子を返却します。 profile ：姓名・生年・性別を返却します。 email ：メールアドレスと確認済みフラグを返却します。 address ：ユーザー登録住所情報を返却します。※URLエンコードが必要です。"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "state",
+            "description": "CSRF対策として、同一のセッションであることを確認するために利用します。リクエストごとにアプリケーション側で生成した十分な長さのランダムな文字列を指定してください。"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "nonce",
+            "description": "リプレイアタック対策のパラメーターです。リクエストごとにアプリケーション側で生成した十分な長さのランダムな文字列を指定してください。指定したnonce値はID Tokenに含まれて返却されます。ID Tokenの使い回しを防止するために、nonce値を検証し、同じID Tokenが二度以上使用されていないことを確認してください。 nonceの値は十分な不規則性がなければいけません。"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "code_challenge",
+            "description": "認可コード横取り攻撃対策（PKCE）のパラメーターです。code_verifierから生成した値を指定してください。 code_verifierおよびcode_challengeの生成方法は下記をご確認ください。 https://tools.ietf.org/html/rfc7636#page-8"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "code_challenge_method",
+            "description": "認可コード横取り攻撃対策（PKCE）のパラメーターです。code_challengeの生成方法に応じた値を指定してください。 plain(デフォルト)：code_verifierと同じ値の場合。S256：code_verifierをSHA256でハッシュ化し、Base64URLエンコードした値の場合。セキュリティ上の観点から、S256での実装が難しい場合でのみplainを指定してください"
+          }
+        ]
+      },
+      "post": {
+        "summary": "",
+        "operationId": "post-oauth-v1-authorization",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/oauth/v1/public-keys": {
+      "get": {
+        "summary": "Public Key Endpoint",
+        "tags": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "kid": {
+                      "type": "string",
+                      "description": "ID TokenのHeaderに含まれているKey ID。\nSignatureを生成したPrivate Keyの対になるPublic Keyを判定するために利用"
+                    },
+                    "public key": {
+                      "type": "string",
+                      "description": "Signatureを生成したPrivate Keyの対になるPublic Key文字列"
+                    }
+                  }
+                },
+                "examples": {
+                  "成功時": {
+                    "value": {
+                      "kid": "0cc175b9c0f1b6a831c399e269772661",
+                      "public key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArcbmlREPkF3YEkO0eSk7v3fpekcJty3QON6bkFoKWFUClPXTpVXi9KffpeZPbVjAnN6nlBA4A0sYdzljbpLujdf19XGKGw4Xa1c9oZdjLA9SNTm+Tvbh3657ApOdqahKoFRtZdSnclWD/z2pnalIWeD+Zyh9uxGP66zIchAr2N3YVZb/5MAdVIgbSAk97MdmFMfAjlxKXLwMYiKWuoZWwhlsP8EGA+4KIBWaSUOsARBkbtCo2ftVXLXMRV7fbyp3DY3tUzMFGkSPVRy04Uh8FELERMiuITOnXwcdt33P8YbTjzuE2OVh91lUkzgGTp5PfoHfmI0jgUOsOgQEYcZX8QIDAQAB"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-oauth-v1-public-keys",
+        "description": "ID TokenのSignatureを検証するためのPublic Keyを返却するエンドポイントです。"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "title": "User",
+        "type": "object",
+        "description": "",
+        "x-examples": {
+          "Alice Smith": {
+            "id": 142,
+            "firstName": "Alice",
+            "lastName": "Smith",
+            "email": "alice.smith@gmail.com",
+            "dateOfBirth": "1997-10-31",
+            "emailVerified": true,
+            "signUpDate": "2019-08-24"
+          }
+        },
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique identifier for the given user."
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "format": "date",
+            "example": "1997-10-31"
+          },
+          "emailVerified": {
+            "type": "boolean",
+            "description": "Set to true if the user's email has been verified."
+          },
+          "createDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The date that the user was created."
+          }
+        },
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "email",
+          "emailVerified"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "Authorization": {
+        "type": "openIdConnect"
+      }
+    }
+  }
+}
